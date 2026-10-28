@@ -1,0 +1,1467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ReSell Hub - Verified Second-Hand Marketplace</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              800: '#065f46',
+            },
+            accent: {
+              50: '#f0f9ff',
+              500: '#0ea5e9',
+              600: '#0284c7',
+              700: '#0369a1',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+    .badge-glow {
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.25);
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+
+  <!-- Notification Toast Container -->
+  <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- Top Announcement: Commission & Business Model -->
+  <div class="bg-gradient-to-r from-emerald-800 via-teal-800 to-slate-900 text-white text-xs md:text-sm py-2 px-4 shadow-sm">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2">
+        <span class="bg-emerald-500 text-slate-900 font-bold px-2 py-0.5 rounded text-xs uppercase tracking-wide">Escrow Protected</span>
+        <span>Every sale is held securely. Buyers get inspected gear; sellers get guaranteed payouts.</span>
+      </div>
+      <div class="flex items-center gap-4 text-emerald-200">
+        <span class="flex items-center gap-1"><i class="fa-solid fa-hand-holding-dollar text-emerald-400"></i> Platform Take Rate: <strong>10%</strong></span>
+        <button onclick="openModal('howItWorksModal')" class="underline hover:text-white transition">See Business Model</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Header / Navigation Bar -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-xs">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <!-- Logo -->
+      <div class="flex items-center gap-3 cursor-pointer" onclick="switchView('browse')">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center text-white shadow-md">
+          <i class="fa-solid fa-repeat text-lg"></i>
+        </div>
+        <div>
+          <span class="text-xl font-black tracking-tight text-slate-900">ReSell<span class="text-emerald-600">Hub</span></span>
+          <span class="text-[10px] block font-semibold text-slate-400 uppercase tracking-wider -mt-1">Fair & Safe Second-Hand</span>
+        </div>
+      </div>
+
+      <!-- Center Nav Links -->
+      <nav class="hidden md:flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
+        <button id="navBrowseBtn" onclick="switchView('browse')" class="px-4 py-2 rounded-lg font-medium text-sm transition text-white bg-emerald-600 shadow-sm">
+          <i class="fa-solid fa-store mr-1.5"></i> Buy & Browse
+        </button>
+        <button id="navSellBtn" onclick="switchView('sell')" class="px-4 py-2 rounded-lg font-medium text-sm transition text-slate-600 hover:text-slate-900">
+          <i class="fa-solid fa-tag mr-1.5"></i> Sell an Item
+        </button>
+        <button id="navAdminBtn" onclick="switchView('admin')" class="px-4 py-2 rounded-lg font-medium text-sm transition text-slate-600 hover:text-slate-900 flex items-center gap-1.5">
+          <i class="fa-solid fa-shield-halved text-amber-500"></i> Team / Admin Hub
+          <span id="pendingBadge" class="bg-amber-100 text-amber-800 text-[10px] font-bold px-1.5 py-0.2 rounded-full">0</span>
+        </button>
+      </nav>
+
+      <!-- Right User Simulator -->
+      <div class="flex items-center gap-3">
+        <div class="hidden sm:flex flex-col text-right">
+          <span id="currentUserName" class="text-xs font-bold text-slate-900">Alex Morgan</span>
+          <span id="currentUserRoleBadge" class="text-[11px] font-medium text-emerald-600">Active: Student Buyer</span>
+        </div>
+        <!-- Role Switcher Dropdown -->
+        <div class="relative">
+          <button id="roleMenuBtn" onclick="toggleRoleMenu()" class="w-10 h-10 rounded-full bg-slate-100 border border-slate-300 hover:border-emerald-500 flex items-center justify-center text-slate-700 hover:bg-slate-50 transition">
+            <i class="fa-solid fa-user-gear"></i>
+          </button>
+          <div id="roleDropdown" class="hidden absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50 text-xs">
+            <div class="px-3 py-1.5 font-bold text-slate-400 uppercase tracking-wider text-[10px]">Simulate Account Role</div>
+            <button onclick="setSimulatedRole('buyer')" class="w-full text-left px-3 py-2 hover:bg-emerald-50 flex items-center justify-between">
+              <span><i class="fa-solid fa-bag-shopping text-emerald-600 mr-2"></i> Buyer Account</span>
+              <i class="fa-solid fa-check text-emerald-600" id="checkBuyer"></i>
+            </button>
+            <button onclick="setSimulatedRole('seller')" class="w-full text-left px-3 py-2 hover:bg-emerald-50 flex items-center justify-between">
+              <span><i class="fa-solid fa-tags text-indigo-600 mr-2"></i> Seller Account</span>
+              <i class="fa-solid fa-check text-emerald-600 hidden" id="checkSeller"></i>
+            </button>
+            <button onclick="setSimulatedRole('admin')" class="w-full text-left px-3 py-2 hover:bg-emerald-50 flex items-center justify-between">
+              <span><i class="fa-solid fa-briefcase text-amber-600 mr-2"></i> Platform Team (Admin)</span>
+              <i class="fa-solid fa-check text-emerald-600 hidden" id="checkAdmin"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Navigation Subbar -->
+    <div class="md:hidden flex border-t border-slate-200 bg-white">
+      <button onclick="switchView('browse')" id="mobileNavBrowse" class="flex-1 py-2.5 text-xs text-center font-semibold text-emerald-600 border-b-2 border-emerald-600">Browse</button>
+      <button onclick="switchView('sell')" id="mobileNavSell" class="flex-1 py-2.5 text-xs text-center font-medium text-slate-500">Sell Item</button>
+      <button onclick="switchView('admin')" id="mobileNavAdmin" class="flex-1 py-2.5 text-xs text-center font-medium text-slate-500 flex items-center justify-center gap-1">
+        Team Ops <span id="mobilePendingBadge" class="bg-amber-100 text-amber-800 text-[10px] px-1 rounded-full">0</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+    <!-- ========================================== -->
+    <!-- VIEW 1: BROWSE & BUY MARKETPLACE           -->
+    <!-- ========================================== -->
+    <section id="viewBrowse" class="space-y-6">
+      
+      <!-- Hero Banner & Value Proposition -->
+      <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-950 text-white rounded-2xl p-6 sm:p-8 shadow-md relative overflow-hidden">
+        <div class="relative z-10 max-w-2xl">
+          <div class="inline-flex items-center gap-2 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs px-3 py-1 rounded-full mb-3">
+            <i class="fa-solid fa-shield-check"></i> 100% Quality Inspected & Escrow Guarded
+          </div>
+          <h1 class="text-2xl sm:text-4xl font-extrabold tracking-tight mb-2">Buy Quality Used Gear at Honest Prices.</h1>
+          <p class="text-slate-300 text-sm sm:text-base mb-6 leading-relaxed">
+            Sellers get easy cash without hassle. Buyers get authenticated pre-owned goods. Our team collects the item, tests it, delivers to you, and pays out the seller seamlessly!
+          </p>
+          <div class="flex flex-wrap gap-3">
+            <button onclick="document.getElementById('catalogHeading').scrollIntoView({ behavior: 'smooth' })" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-5 py-2.5 rounded-xl text-sm transition shadow-sm">
+              Explore Deals
+            </button>
+            <button onclick="switchView('sell')" class="bg-white/10 hover:bg-white/20 text-white border border-white/20 font-semibold px-5 py-2.5 rounded-xl text-sm transition">
+              List Your Product
+            </button>
+          </div>
+        </div>
+        <div class="hidden lg:block absolute right-8 top-1/2 -translate-y-1/2 opacity-20 pointer-events-none">
+          <i class="fa-solid fa-recycle text-[160px] text-emerald-400"></i>
+        </div>
+      </div>
+
+      <!-- Step-by-Step Flow Bar (How Platform Works) -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+        <div class="flex items-start gap-3 p-2">
+          <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold text-sm shrink-0">1</div>
+          <div>
+            <h4 class="text-xs font-bold text-slate-900">Seller Posts Listing</h4>
+            <p class="text-[11px] text-slate-500">Seller sets convenient price; instant payout calculation.</p>
+          </div>
+        </div>
+        <div class="flex items-start gap-3 p-2">
+          <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold text-sm shrink-0">2</div>
+          <div>
+            <h4 class="text-xs font-bold text-slate-900">Buyer Places Order</h4>
+            <p class="text-[11px] text-slate-500">Funds held in platform escrow. No money lost.</p>
+          </div>
+        </div>
+        <div class="flex items-start gap-3 p-2">
+          <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold text-sm shrink-0">3</div>
+          <div>
+            <h4 class="text-xs font-bold text-slate-900">Our Team Verifies</h4>
+            <p class="text-[11px] text-slate-500">We collect, physically inspect, and certify the item.</p>
+          </div>
+        </div>
+        <div class="flex items-start gap-3 p-2">
+          <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold text-sm shrink-0">4</div>
+          <div>
+            <h4 class="text-xs font-bold text-slate-900">Payout & Delivery</h4>
+            <p class="text-[11px] text-slate-500">Buyer receives item, seller gets 90%, our team earns 10% fee.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Controls Bar: Search, Category Filter, and Sorting -->
+      <div id="catalogHeading" class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-3">
+        <div class="flex flex-col md:flex-row gap-3 items-center justify-between">
+          <!-- Search input -->
+          <div class="relative w-full md:w-80">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+            <input type="text" id="searchInput" oninput="applyFilters()" placeholder="Search phones, cycles, notes, monitors..." 
+                   class="w-full pl-9 pr-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-500 focus:bg-white transition">
+          </div>
+
+          <!-- Sort dropdown -->
+          <div class="flex items-center gap-2 w-full md:w-auto justify-end">
+            <span class="text-xs text-slate-500 font-medium">Sort by:</span>
+            <select id="sortSelect" onchange="applyFilters()" class="text-xs bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-2 font-medium focus:outline-none focus:border-emerald-500">
+              <option value="featured">Featured / Newest</option>
+              <option value="price-asc">Price: Low to High</option>
+              <option value="price-desc">Price: High to Low</option>
+              <option value="savings">Highest Savings</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Category Pill Buttons -->
+        <div class="flex items-center gap-2 overflow-x-auto pb-1 pt-1 text-xs">
+          <button onclick="setCategoryFilter('All')" class="cat-pill active-pill px-3 py-1.5 rounded-full font-medium transition bg-slate-900 text-white" data-category="All">All Items</button>
+          <button onclick="setCategoryFilter('Electronics')" class="cat-pill px-3 py-1.5 rounded-full font-medium transition bg-slate-100 text-slate-600 hover:bg-slate-200" data-category="Electronics"><i class="fa-solid fa-laptop mr-1"></i> Electronics</button>
+          <button onclick="setCategoryFilter('Bikes & Cycles')" class="cat-pill px-3 py-1.5 rounded-full font-medium transition bg-slate-100 text-slate-600 hover:bg-slate-200" data-category="Bikes & Cycles"><i class="fa-solid fa-bicycle mr-1"></i> Bikes & Mobility</button>
+          <button onclick="setCategoryFilter('Textbooks & Notes')" class="cat-pill px-3 py-1.5 rounded-full font-medium transition bg-slate-100 text-slate-600 hover:bg-slate-200" data-category="Textbooks & Notes"><i class="fa-solid fa-book mr-1"></i> Books & Academics</button>
+          <button onclick="setCategoryFilter('Dorm & Furniture')" class="cat-pill px-3 py-1.5 rounded-full font-medium transition bg-slate-100 text-slate-600 hover:bg-slate-200" data-category="Dorm & Furniture"><i class="fa-solid fa-couch mr-1"></i> Dorm Essentials</button>
+          <button onclick="setCategoryFilter('Gadgets & Audio')" class="cat-pill px-3 py-1.5 rounded-full font-medium transition bg-slate-100 text-slate-600 hover:bg-slate-200" data-category="Gadgets & Audio"><i class="fa-solid fa-headphones mr-1"></i> Audio & Accessories</button>
+        </div>
+      </div>
+
+      <!-- Marketplace Cards Grid -->
+      <div id="productGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+        <!-- Rendered via JS -->
+      </div>
+
+      <!-- Empty State -->
+      <div id="noProductsFound" class="hidden text-center py-16 bg-white rounded-2xl border border-slate-200">
+        <i class="fa-solid fa-box-open text-4xl text-slate-300 mb-3"></i>
+        <h3 class="text-base font-bold text-slate-700">No items match your filter</h3>
+        <p class="text-xs text-slate-400 mt-1 mb-4">Try clearing your search query or picking another category.</p>
+        <button onclick="clearFilters()" class="text-xs bg-emerald-600 text-white font-semibold px-4 py-2 rounded-lg">Reset Filters</button>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- VIEW 2: SELLER DASHBOARD & LISTING FORM    -->
+    <!-- ========================================== -->
+    <section id="viewSell" class="hidden space-y-6">
+      
+      <!-- Top banner for sellers -->
+      <div class="bg-gradient-to-r from-emerald-900 to-teal-800 text-white rounded-2xl p-6 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <span class="text-xs uppercase tracking-wider text-emerald-300 font-bold">Seller Hub</span>
+          <h2 class="text-2xl font-black mt-1">Turn Unused Items into Guaranteed Cash</h2>
+          <p class="text-xs md:text-sm text-emerald-100 max-w-xl mt-1">
+            We collect the item from your doorstep once an order is placed, run quality tests, and wire your money directly via UPI or Bank transfer.
+          </p>
+        </div>
+        <div class="bg-white/10 border border-white/20 p-3 rounded-xl text-center min-w-[180px]">
+          <span class="text-xs block text-slate-200">Team Platform Fee</span>
+          <span class="text-2xl font-black text-emerald-300">Only 10%</span>
+          <span class="text-[10px] block text-emerald-200">You take home 90% in cash</span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Left: Listing Form (JavaScript client-side validation) -->
+        <div class="lg:col-span-7 bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-5">
+          <div class="border-b border-slate-100 pb-3">
+            <h3 class="text-base font-bold text-slate-800">Item Details & Specification</h3>
+            <p class="text-xs text-slate-500">Provide transparent specs to help buyers buy faster with trust.</p>
+          </div>
+
+          <form id="sellForm" onsubmit="handleListingSubmit(event)" class="space-y-4">
+            
+            <!-- Title -->
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Item Title *</label>
+              <input type="text" id="itemTitle" required placeholder="e.g. Hero Sprint 21-Speed Gear Bicycle" 
+                     class="w-full text-xs sm:text-sm px-3 py-2.5 rounded-lg border border-slate-200 focus:outline-none focus:border-emerald-500">
+              <span id="titleErr" class="text-[11px] text-red-500 hidden mt-0.5">Please specify a title (min 5 characters).</span>
+            </div>
+
+            <!-- Category & Condition -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Category *</label>
+                <select id="itemCategory" required class="w-full text-xs sm:text-sm px-3 py-2.5 rounded-lg border border-slate-200 bg-white focus:outline-none focus:border-emerald-500">
+                  <option value="Electronics">Electronics & Hardware</option>
+                  <option value="Bikes & Cycles">Bikes & Cycles</option>
+                  <option value="Textbooks & Notes">Textbooks & Notes</option>
+                  <option value="Dorm & Furniture">Dorm & Furniture</option>
+                  <option value="Gadgets & Audio">Gadgets & Audio</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Physical Condition *</label>
+                <select id="itemCondition" required class="w-full text-xs sm:text-sm px-3 py-2.5 rounded-lg border border-slate-200 bg-white focus:outline-none focus:border-emerald-500">
+                  <option value="Like New">Like New (Flawless, barely used)</option>
+                  <option value="Very Good">Very Good (Minor signs of use)</option>
+                  <option value="Good">Good (Working, some scratches)</option>
+                  <option value="Fair">Fair (Heavy use, 100% operational)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Price & Real-time Calculator Hook -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Original Retail Price ($ / ₹) *</label>
+                <div class="relative">
+                  <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-semibold text-xs">$</span>
+                  <input type="number" id="itemOriginalPrice" required min="1" step="any" placeholder="150" 
+                         class="w-full pl-7 pr-3 py-2.5 text-xs sm:text-sm rounded-lg border border-slate-200 focus:outline-none focus:border-emerald-500">
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Your Selling Price ($ / ₹) *</label>
+                <div class="relative">
+                  <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-semibold text-xs">$</span>
+                  <input type="number" id="itemSellingPrice" oninput="updateCalculator()" required min="1" step="any" placeholder="60" 
+                         class="w-full pl-7 pr-3 py-2.5 text-xs sm:text-sm rounded-lg border border-slate-200 focus:outline-none focus:border-emerald-500 font-bold text-slate-900">
+                </div>
+              </div>
+            </div>
+
+            <!-- Description -->
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Item Description & Inclusions *</label>
+              <textarea id="itemDesc" required rows="3" placeholder="Mention age, warranty card, charger included, pickup preference..." 
+                        class="w-full text-xs sm:text-sm p-3 rounded-lg border border-slate-200 focus:outline-none focus:border-emerald-500"></textarea>
+            </div>
+
+            <!-- Image selection simulated presets -->
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Select Cover Visual Theme</label>
+              <div class="grid grid-cols-4 gap-2 text-center text-xs">
+                <label class="border rounded-lg p-2 cursor-pointer hover:border-emerald-500 has-[:checked]:border-emerald-600 has-[:checked]:bg-emerald-50">
+                  <input type="radio" name="coverType" value="cycle" checked class="hidden">
+                  <i class="fa-solid fa-bicycle text-lg block text-slate-600 mb-1"></i>
+                  <span>Cycle</span>
+                </label>
+                <label class="border rounded-lg p-2 cursor-pointer hover:border-emerald-500 has-[:checked]:border-emerald-600 has-[:checked]:bg-emerald-50">
+                  <input type="radio" name="coverType" value="tech" class="hidden">
+                  <i class="fa-solid fa-laptop text-lg block text-slate-600 mb-1"></i>
+                  <span>Laptop/PC</span>
+                </label>
+                <label class="border rounded-lg p-2 cursor-pointer hover:border-emerald-500 has-[:checked]:border-emerald-600 has-[:checked]:bg-emerald-50">
+                  <input type="radio" name="coverType" value="book" class="hidden">
+                  <i class="fa-solid fa-book text-lg block text-slate-600 mb-1"></i>
+                  <span>Books</span>
+                </label>
+                <label class="border rounded-lg p-2 cursor-pointer hover:border-emerald-500 has-[:checked]:border-emerald-600 has-[:checked]:bg-emerald-50">
+                  <input type="radio" name="coverType" value="general" class="hidden">
+                  <i class="fa-solid fa-box text-lg block text-slate-600 mb-1"></i>
+                  <span>Other</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Payout Details -->
+            <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+              <span class="text-xs font-bold text-slate-800 flex items-center gap-1">
+                <i class="fa-solid fa-money-bill-transfer text-emerald-600"></i> Seller Payout Method
+              </span>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <input type="text" id="sellerUpi" placeholder="UPI ID / PayPal (e.g. user@okhdfcbank)" required
+                       class="text-xs px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-500">
+                <input type="text" id="sellerPhone" placeholder="Phone (for team pickup sync)" required
+                       class="text-xs px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-500">
+              </div>
+            </div>
+
+            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl text-sm transition shadow-sm flex items-center justify-center gap-2">
+              <i class="fa-solid fa-cloud-arrow-up"></i> Publish to ReSell Marketplace
+            </button>
+          </form>
+        </div>
+
+        <!-- Right: Real-time Profit & Escrow Breakdown Preview -->
+        <div class="lg:col-span-5 space-y-4">
+          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs sticky top-24">
+            <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wide flex items-center gap-2">
+              <i class="fa-solid fa-calculator text-emerald-600"></i> Dynamic Financial Breakdown
+            </h3>
+            <p class="text-xs text-slate-500 mt-0.5">Calculated in real-time using our 10% team escrow fee.</p>
+
+            <div class="mt-5 space-y-3">
+              <div class="flex justify-between items-center text-sm py-2 border-b border-slate-100">
+                <span class="text-slate-600">Your Declared Price</span>
+                <span id="calcDeclaredPrice" class="font-bold text-slate-900">$0.00</span>
+              </div>
+              <div class="flex justify-between items-center text-sm py-2 border-b border-slate-100 text-emerald-700 bg-emerald-50/70 px-2 rounded-lg">
+                <span class="flex items-center gap-1.5 font-medium">
+                  <i class="fa-solid fa-circle-check text-emerald-600"></i> You Receive (90%)
+                </span>
+                <span id="calcSellerPayout" class="font-bold text-base text-emerald-700">$0.00</span>
+              </div>
+              <div class="flex justify-between items-center text-sm py-2 border-b border-slate-100 text-slate-600">
+                <span class="flex items-center gap-1.5">
+                  <i class="fa-solid fa-hand-holding-dollar text-slate-400"></i> Team Escrow & Profit (10%)
+                </span>
+                <span id="calcPlatformProfit" class="font-semibold text-slate-700">$0.00</span>
+              </div>
+              <div class="flex justify-between items-center text-sm py-2 bg-slate-900 text-white px-3 rounded-xl font-bold">
+                <span>Final Listing Price for Buyer</span>
+                <span id="calcFinalPrice" class="text-emerald-400 text-base">$0.00</span>
+              </div>
+            </div>
+
+            <!-- Escrow Guarantee Badge -->
+            <div class="mt-6 p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+              <div class="flex items-center gap-2 text-xs font-bold text-slate-800">
+                <i class="fa-solid fa-lock text-emerald-600"></i> Why this model protects you:
+              </div>
+              <ul class="text-[11px] text-slate-600 space-y-1.5 pl-4 list-disc">
+                <li>Zero bargaining or awkward stranger meetups at your home.</li>
+                <li>Our team picks up, verifies, and wraps the product.</li>
+                <li>Payment is guaranteed through our escrow vault upon delivery.</li>
+              </ul>
+            </div>
+
+            <!-- Quick stats of this session's listings -->
+            <div class="mt-4 pt-4 border-t border-slate-100">
+              <div class="flex justify-between text-xs text-slate-500">
+                <span>Your Active Listings:</span>
+                <span id="sellerActiveCount" class="font-bold text-slate-800">0 Items</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Seller's Own Active Listings Section -->
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
+        <h3 class="text-base font-bold text-slate-800 mb-4 flex items-center justify-between">
+          <span>Your Posted Inventory</span>
+          <span class="text-xs font-normal text-slate-500">Items you have currently on sale</span>
+        </h3>
+        <div id="sellerItemsContainer" class="divide-y divide-slate-100">
+          <!-- Filled by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- VIEW 3: TEAM / ADMIN PROFIT & ESCROW HUB  -->
+    <!-- ========================================== -->
+    <section id="viewAdmin" class="hidden space-y-6">
+      
+      <!-- Operations Dashboard Header -->
+      <div class="bg-slate-900 text-white p-6 rounded-2xl shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <div class="inline-flex items-center gap-1.5 bg-amber-500/20 text-amber-300 text-xs px-2.5 py-0.5 rounded-md font-semibold mb-2">
+            <i class="fa-solid fa-shield-halved"></i> Internal Team Control Center
+          </div>
+          <h2 class="text-2xl font-black">Escrow Vault & Team Profit Ledger</h2>
+          <p class="text-xs sm:text-sm text-slate-400 mt-1 max-w-xl">
+            Simulate the operations backend: review orders, dispatch quality inspectors, release payouts to sellers, and watch our team's 10% margin tally up.
+          </p>
+        </div>
+        <button onclick="seedDemoOrders()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold px-4 py-2 rounded-xl transition">
+          <i class="fa-solid fa-rotate-right mr-1"></i> Simulate Test Orders
+        </button>
+      </div>
+
+      <!-- Financial Metrics Cards (Commission Profit Tracker) -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <div class="flex items-center justify-between text-slate-500 text-xs mb-2 font-medium">
+            <span>Gross Merchandise Value</span>
+            <div class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center"><i class="fa-solid fa-chart-line"></i></div>
+          </div>
+          <div id="statGmv" class="text-2xl font-black text-slate-900">$0.00</div>
+          <span class="text-[11px] text-slate-400 mt-1 block">Total money handled in escrow</span>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-emerald-200 bg-emerald-50/20 shadow-xs">
+          <div class="flex items-center justify-between text-emerald-800 text-xs mb-2 font-bold">
+            <span>Our Team Profit (10%)</span>
+            <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center"><i class="fa-solid fa-sack-dollar"></i></div>
+          </div>
+          <div id="statProfit" class="text-2xl font-black text-emerald-600">$0.00</div>
+          <span class="text-[11px] text-emerald-700/80 mt-1 block">Platform retained net revenue</span>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <div class="flex items-center justify-between text-slate-500 text-xs mb-2 font-medium">
+            <span>Seller Payouts Released</span>
+            <div class="w-7 h-7 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center"><i class="fa-solid fa-money-bill-transfer"></i></div>
+          </div>
+          <div id="statPayouts" class="text-2xl font-black text-slate-800">$0.00</div>
+          <span class="text-[11px] text-slate-400 mt-1 block">Transferred to sellers via UPI</span>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <div class="flex items-center justify-between text-slate-500 text-xs mb-2 font-medium">
+            <span>Orders In Pipeline</span>
+            <div class="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center"><i class="fa-solid fa-boxes-packing"></i></div>
+          </div>
+          <div id="statActiveOrders" class="text-2xl font-black text-amber-600">0</div>
+          <span class="text-[11px] text-slate-400 mt-1 block">Awaiting inspection / delivery</span>
+        </div>
+
+      </div>
+
+      <!-- Live Order Pipeline / Escrow Table -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+        <div class="p-5 border-b border-slate-100 flex flex-wrap justify-between items-center gap-2">
+          <div>
+            <h3 class="font-bold text-slate-900 text-base">Escrow Pipeline Management</h3>
+            <p class="text-xs text-slate-500">Verify quality, update shipment, and release funds when the buyer receives the item.</p>
+          </div>
+          <span class="text-xs bg-slate-100 text-slate-700 px-3 py-1 rounded-full font-medium">Auto-refreshed</span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr class="bg-slate-50 text-slate-500 border-b border-slate-200 font-semibold uppercase tracking-wider text-[11px]">
+                <th class="py-3 px-4">Order ID & Item</th>
+                <th class="py-3 px-4">Buyer & Seller</th>
+                <th class="py-3 px-4">Total Paid</th>
+                <th class="py-3 px-4">Our 10% Cut</th>
+                <th class="py-3 px-4">Seller Share (90%)</th>
+                <th class="py-3 px-4">Escrow Status</th>
+                <th class="py-3 px-4 text-right">Team Action</th>
+              </tr>
+            </thead>
+            <tbody id="ordersTableBody" class="divide-y divide-slate-100 text-slate-700">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <div id="noOrdersMessage" class="hidden p-12 text-center text-slate-400">
+          <i class="fa-solid fa-inbox text-3xl mb-2"></i>
+          <p class="text-xs">No orders yet. Buy an item in the Browse tab or click "Simulate Test Orders" above.</p>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ========================================== -->
+  <!-- MODAL: PRODUCT DETAILS & BUY NOW           -->
+  <!-- ========================================== -->
+  <div id="productModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl relative overflow-hidden max-h-[90vh] flex flex-col">
+      <button onclick="closeModal('productModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-lg">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="overflow-y-auto space-y-4 pr-1">
+        <div class="flex items-center gap-2">
+          <span id="modalCategory" class="text-[11px] font-bold uppercase tracking-wider bg-slate-100 text-slate-700 px-2.5 py-1 rounded-md">Category</span>
+          <span id="modalCondition" class="text-[11px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-md">Condition</span>
+        </div>
+
+        <h3 id="modalTitle" class="text-xl font-black text-slate-900">Product Title</h3>
+
+        <div class="h-44 rounded-xl bg-gradient-to-tr from-slate-100 to-slate-200 flex items-center justify-center text-slate-400 text-5xl">
+          <i id="modalIcon" class="fa-solid fa-box"></i>
+        </div>
+
+        <p id="modalDesc" class="text-xs sm:text-sm text-slate-600 leading-relaxed"></p>
+
+        <!-- Pricing with Original vs Used -->
+        <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between">
+          <div>
+            <span class="text-[10px] text-slate-400 uppercase tracking-wide block">Second-Hand Price</span>
+            <div class="flex items-baseline gap-2">
+              <span id="modalPrice" class="text-2xl font-black text-emerald-600">$0.00</span>
+              <span id="modalOrigPrice" class="text-xs text-slate-400 line-through">$0.00</span>
+            </div>
+          </div>
+          <div class="text-right">
+            <span id="modalSavings" class="text-xs font-bold text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded-full">Save 50%</span>
+          </div>
+        </div>
+
+        <!-- Escrow Protection Guarantee Box -->
+        <div class="bg-blue-50/70 border border-blue-200 p-3 rounded-xl flex items-start gap-3">
+          <i class="fa-solid fa-shield-halved text-blue-600 text-lg mt-0.5"></i>
+          <div class="text-xs text-blue-900">
+            <span class="font-bold block">ReSell Team Quality Guarantee</span>
+            <span class="text-blue-700">Payment is locked in escrow. If the item does not match description during pickup/delivery inspection, you get 100% full refund immediately.</span>
+          </div>
+        </div>
+
+        <!-- Order Action Button -->
+        <div class="pt-2 flex gap-3">
+          <button onclick="closeModal('productModal')" class="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-semibold text-xs hover:bg-slate-50">Back</button>
+          <button id="modalBuyBtn" class="flex-2 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-sm flex items-center justify-center gap-2">
+            <i class="fa-solid fa-cart-shopping"></i> Proceed to Escrow Checkout
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODAL: CHECKOUT SIMULATION                 -->
+  <!-- ========================================== -->
+  <div id="checkoutModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl relative">
+      <button onclick="closeModal('checkoutModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <h3 class="text-lg font-bold text-slate-900 mb-1 flex items-center gap-2">
+        <i class="fa-solid fa-lock text-emerald-600"></i> Escrow Secured Checkout
+      </h3>
+      <p class="text-xs text-slate-500 mb-4">Your money stays safeguarded with our platform team until verified.</p>
+
+      <div class="space-y-4">
+        <!-- Item summary -->
+        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between text-xs">
+          <div>
+            <div id="checkoutItemTitle" class="font-bold text-slate-800">Product Name</div>
+            <span class="text-slate-400">Seller: Verified Campus User</span>
+          </div>
+          <div id="checkoutItemPrice" class="font-bold text-slate-900">$0.00</div>
+        </div>
+
+        <!-- Transparent Ledger Breakdown -->
+        <div class="space-y-2 text-xs border-y border-slate-100 py-3">
+          <div class="flex justify-between text-slate-600">
+            <span>Item Base Price</span>
+            <span id="checkoutBasePrice">$0.00</span>
+          </div>
+          <div class="flex justify-between text-emerald-700 font-medium">
+            <span>Platform Verification & Escrow Guarantee</span>
+            <span>Included</span>
+          </div>
+          <div class="flex justify-between text-slate-600">
+            <span>Team Doorstep Delivery & Handover</span>
+            <span class="text-emerald-600 font-medium">FREE</span>
+          </div>
+          <div class="flex justify-between font-black text-slate-900 text-sm pt-2 border-t border-slate-200">
+            <span>Total Payable by Buyer</span>
+            <span id="checkoutTotalPayable" class="text-emerald-600">$0.00</span>
+          </div>
+        </div>
+
+        <!-- Delivery & Contact Input -->
+        <div class="space-y-2">
+          <label class="block text-xs font-bold text-slate-700">Delivery Address / Campus Hostel Room</label>
+          <input type="text" id="buyerAddress" placeholder="e.g. Block B, Room 402, South Campus Hostel" required
+                 class="w-full text-xs px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-emerald-500">
+        </div>
+
+        <div class="p-3 rounded-xl bg-amber-50 text-amber-800 border border-amber-200 text-[11px] leading-tight">
+          <i class="fa-solid fa-circle-info mr-1"></i>
+          <strong>Profit Model Note:</strong> Out of this <span id="checkoutProfitExplain">$0.00</span>, exactly 10% is booked as platform team profit once our inspector validates the item.
+        </div>
+
+        <!-- Confirm Button -->
+        <button onclick="confirmOrderPurchase()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition shadow-sm flex items-center justify-center gap-2">
+          <i class="fa-solid fa-shield-check"></i> Authorize & Hold in Escrow
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODAL: HOW IT WORKS / BUSINESS MODEL       -->
+  <!-- ========================================== -->
+  <div id="howItWorksModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl relative">
+      <button onclick="closeModal('howItWorksModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="flex items-center gap-2 text-emerald-600 text-sm font-bold uppercase tracking-wider mb-1">
+        <i class="fa-solid fa-coins"></i> Transparent Monetization
+      </div>
+      <h3 class="text-xl font-black text-slate-900 mb-3">How Our Team Makes Profit & Keeps Users Safe</h3>
+
+      <div class="space-y-4 text-xs text-slate-600 leading-relaxed">
+        <p>
+          Unlike peer-to-peer classifieds where buyers get scammed and sellers get lowballed, <strong>ReSell Hub acts as the trusted middleman and escrow custodian:</strong>
+        </p>
+
+        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+          <div class="flex justify-between font-bold text-slate-800">
+            <span>Example: Used Bicycle Listed at $100</span>
+            <span class="text-emerald-600">10% Platform Cut</span>
+          </div>
+          <div class="grid grid-cols-3 gap-2 text-center pt-1 text-[11px]">
+            <div class="bg-white p-2 rounded-lg border border-slate-100">
+              <span class="text-slate-400 block">Buyer Pays</span>
+              <strong class="text-slate-900">$100</strong>
+            </div>
+            <div class="bg-white p-2 rounded-lg border border-slate-100">
+              <span class="text-slate-400 block">Seller Payout</span>
+              <strong class="text-emerald-600">$90 (90%)</strong>
+            </div>
+            <div class="bg-white p-2 rounded-lg border border-emerald-200 bg-emerald-50/50">
+              <span class="text-slate-400 block">Team Profit</span>
+              <strong class="text-emerald-700">$10 (10%)</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <h4 class="font-bold text-slate-800">What justifies our 10% profit margin?</h4>
+          <ul class="space-y-1.5 list-disc pl-4 text-slate-600">
+            <li><strong>Doorstep Quality Check:</strong> We physically test electronics and examine cycles before passing to the buyer.</li>
+            <li><strong>Zero Chargeback Risk for Sellers:</strong> Seller gets credited right away after verified delivery.</li>
+            <li><strong>Buyer Peace of Mind:</strong> If an item is broken, money is instantly refunded from escrow.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="mt-6">
+        <button onclick="closeModal('howItWorksModal')" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 rounded-xl text-xs">
+          Got It, Thanks!
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500 mt-12">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div class="flex items-center gap-2 font-bold text-slate-800">
+        <i class="fa-solid fa-repeat text-emerald-600"></i> ReSell Hub &bull; Full Stack Project
+      </div>
+      <div>Designed with HTML5 Semantic Markup, Tailwind CSS, & Client-Side JavaScript Logic.</div>
+      <div class="text-[11px] text-slate-400">&copy; All Rights Reserved. Escrow Platform Demo.</div>
+    </div>
+  </footer>
+
+  <!-- ========================================== -->
+  <!-- JAVASCRIPT: APPLICATION LOGIC & STATE      -->
+  <!-- ========================================== -->
+  <script>
+    // Constants & Configuration
+    const PLATFORM_FEE_RATE = 0.10; // 10% automated profit margin
+
+    // Initial Default Seed Data for Marketplace
+    const DEFAULT_PRODUCTS = [
+      {
+        id: 'PRD-101',
+        title: 'Firefox Target 21-Speed Mountain Bike',
+        category: 'Bikes & Cycles',
+        condition: 'Very Good',
+        originalPrice: 220,
+        sellingPrice: 85,
+        desc: 'Shimano gear set in smooth condition. Dual disc brakes, includes heavy-duty combination lock and phone mount.',
+        sellerName: 'Rohan Sharma',
+        sellerUpi: 'rohan@upi',
+        sellerPhone: '+91 98765 43210',
+        coverType: 'cycle',
+        status: 'available', // available | sold
+        createdAt: '2026-10-25'
+      },
+      {
+        id: 'PRD-102',
+        title: 'Sony WH-1000XM4 Noise Cancelling Headphones',
+        category: 'Gadgets & Audio',
+        condition: 'Like New',
+        originalPrice: 349,
+        sellingPrice: 160,
+        desc: 'Used only for 3 months with case and aux cable. Battery lasts 30+ hours, flawless active noise cancellation.',
+        sellerName: 'Priya Verma',
+        sellerUpi: 'priya@okhdfc',
+        sellerPhone: '+91 91234 56789',
+        coverType: 'general',
+        status: 'available',
+        createdAt: '2026-10-26'
+      },
+      {
+        id: 'PRD-103',
+        title: 'Core Java & Data Structures Master Textbooks Set',
+        category: 'Textbooks & Notes',
+        condition: 'Good',
+        originalPrice: 90,
+        sellingPrice: 28,
+        desc: 'Standard semester reference books with handwritten annotations for end-term exams. Complete problem solutions included.',
+        sellerName: 'Amit Patil',
+        sellerUpi: 'amit@paytm',
+        sellerPhone: '+91 99887 76655',
+        coverType: 'book',
+        status: 'available',
+        createdAt: '2026-10-27'
+      },
+      {
+        id: 'PRD-104',
+        title: 'Dell 24" IPS 1080p Borderless Monitor (HDMI/VGA)',
+        category: 'Electronics',
+        condition: 'Very Good',
+        originalPrice: 180,
+        sellingPrice: 75,
+        desc: 'No dead pixels, crisp colors, 75Hz refresh rate. Includes original power adapter and HDMI 2.0 braided cable.',
+        sellerName: 'Kunal Joshi',
+        sellerUpi: 'kunal@axl',
+        sellerPhone: '+91 98111 22233',
+        coverType: 'tech',
+        status: 'available',
+        createdAt: '2026-10-28'
+      },
+      {
+        id: 'PRD-105',
+        title: 'Ergonomic Mesh Study Chair with Lumbar Support',
+        category: 'Dorm & Furniture',
+        condition: 'Good',
+        originalPrice: 110,
+        sellingPrice: 42,
+        desc: 'Hydraulic lift works perfectly. Breathable mesh back ideal for long coding or study sessions.',
+        sellerName: 'Sneha Rao',
+        sellerUpi: 'sneha@ybl',
+        sellerPhone: '+91 97654 32100',
+        coverType: 'general',
+        status: 'available',
+        createdAt: '2026-10-28'
+      }
+    ];
+
+    // Seed Orders for Escrow Demonstration
+    const DEFAULT_ORDERS = [
+      {
+        orderId: 'ORD-8921',
+        productId: 'PRD-106',
+        title: 'Apple iPad 9th Gen 64GB WiFi',
+        buyerName: 'Vikram Mehta',
+        buyerAddress: 'Hostel 3, Room 112',
+        sellerName: 'Tanya Singh',
+        sellerUpi: 'tanya@icici',
+        price: 210,
+        platformFee: 21.00,
+        sellerPayout: 189.00,
+        status: 'Verified & In Transit', // 'Placed', 'Verified & In Transit', 'Delivered & Released'
+        orderDate: '2026-10-27'
+      }
+    ];
+
+    // State Holders
+    let products = [];
+    let orders = [];
+    let currentFilterCategory = 'All';
+    let currentRole = 'buyer'; // 'buyer', 'seller', 'admin'
+    let selectedProductForCheckout = null;
+
+    // Initialize State from LocalStorage
+    function initApp() {
+      try {
+        const savedProducts = localStorage.getItem('resell_products');
+        const savedOrders = localStorage.getItem('resell_orders');
+        products = savedProducts ? JSON.parse(savedProducts) : DEFAULT_PRODUCTS;
+        orders = savedOrders ? JSON.parse(savedOrders) : DEFAULT_ORDERS;
+      } catch (e) {
+        products = DEFAULT_PRODUCTS;
+        orders = DEFAULT_ORDERS;
+      }
+
+      renderProducts();
+      renderSellerInventory();
+      renderAdminDashboard();
+      updateCalculator();
+      updatePendingBadge();
+    }
+
+    // Save to LocalStorage
+    function saveState() {
+      localStorage.setItem('resell_products', JSON.stringify(products));
+      localStorage.setItem('resell_orders', JSON.stringify(orders));
+      updatePendingBadge();
+    }
+
+    // View Switching Logic
+    function switchView(viewName) {
+      const vBrowse = document.getElementById('viewBrowse');
+      const vSell = document.getElementById('viewSell');
+      const vAdmin = document.getElementById('viewAdmin');
+
+      const navBrowseBtn = document.getElementById('navBrowseBtn');
+      const navSellBtn = document.getElementById('navSellBtn');
+      const navAdminBtn = document.getElementById('navAdminBtn');
+
+      const mBrowse = document.getElementById('mobileNavBrowse');
+      const mSell = document.getElementById('mobileNavSell');
+      const mAdmin = document.getElementById('mobileNavAdmin');
+
+      // Hide all views
+      vBrowse.classList.add('hidden');
+      vSell.classList.add('hidden');
+      vAdmin.classList.add('hidden');
+
+      // Reset desktop nav styles
+      [navBrowseBtn, navSellBtn, navAdminBtn].forEach(btn => {
+        btn.className = 'px-4 py-2 rounded-lg font-medium text-sm transition text-slate-600 hover:text-slate-900';
+      });
+
+      // Reset mobile styles
+      [mBrowse, mSell, mAdmin].forEach(btn => {
+        btn.className = 'flex-1 py-2.5 text-xs text-center font-medium text-slate-500';
+      });
+
+      if (viewName === 'browse') {
+        vBrowse.classList.remove('hidden');
+        navBrowseBtn.className = 'px-4 py-2 rounded-lg font-medium text-sm transition text-white bg-emerald-600 shadow-sm';
+        mBrowse.className = 'flex-1 py-2.5 text-xs text-center font-semibold text-emerald-600 border-b-2 border-emerald-600';
+      } else if (viewName === 'sell') {
+        vSell.classList.remove('hidden');
+        navSellBtn.className = 'px-4 py-2 rounded-lg font-medium text-sm transition text-white bg-emerald-600 shadow-sm';
+        mSell.className = 'flex-1 py-2.5 text-xs text-center font-semibold text-emerald-600 border-b-2 border-emerald-600';
+      } else if (viewName === 'admin') {
+        vAdmin.classList.remove('hidden');
+        navAdminBtn.className = 'px-4 py-2 rounded-lg font-medium text-sm transition text-white bg-slate-900 shadow-sm flex items-center gap-1.5';
+        mAdmin.className = 'flex-1 py-2.5 text-xs text-center font-semibold text-slate-900 border-b-2 border-slate-900 flex items-center justify-center gap-1';
+        renderAdminDashboard();
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Role Simulator Switcher
+    function toggleRoleMenu() {
+      const dropdown = document.getElementById('roleDropdown');
+      dropdown.classList.toggle('hidden');
+    }
+
+    function setSimulatedRole(role) {
+      currentRole = role;
+      document.getElementById('checkBuyer').classList.add('hidden');
+      document.getElementById('checkSeller').classList.add('hidden');
+      document.getElementById('checkAdmin').classList.add('hidden');
+
+      const nameLabel = document.getElementById('currentUserName');
+      const roleLabel = document.getElementById('currentUserRoleBadge');
+
+      if (role === 'buyer') {
+        document.getElementById('checkBuyer').classList.remove('hidden');
+        nameLabel.innerText = 'Alex Morgan';
+        roleLabel.innerText = 'Active: Campus Buyer';
+        roleLabel.className = 'text-[11px] font-medium text-emerald-600';
+        switchView('browse');
+        showToast('Switched to Buyer Profile');
+      } else if (role === 'seller') {
+        document.getElementById('checkSeller').classList.remove('hidden');
+        nameLabel.innerText = 'Alex (Seller Mode)';
+        roleLabel.innerText = 'Active: Certified Seller';
+        roleLabel.className = 'text-[11px] font-medium text-indigo-600';
+        switchView('sell');
+        showToast('Switched to Seller Dashboard');
+      } else {
+        document.getElementById('checkAdmin').classList.remove('hidden');
+        nameLabel.innerText = 'ReSell Ops Team';
+        roleLabel.innerText = 'Active: Platform Admin & Escrow';
+        roleLabel.className = 'text-[11px] font-medium text-amber-600';
+        switchView('admin');
+        showToast('Switched to Admin Team View');
+      }
+      document.getElementById('roleDropdown').classList.add('hidden');
+    }
+
+    // Dynamic Category and Keyword Filtering
+    function setCategoryFilter(category) {
+      currentFilterCategory = category;
+      document.querySelectorAll('.cat-pill').forEach(pill => {
+        if (pill.getAttribute('data-category') === category) {
+          pill.className = 'cat-pill active-pill px-3 py-1.5 rounded-full font-medium transition bg-slate-900 text-white';
+        } else {
+          pill.className = 'cat-pill px-3 py-1.5 rounded-full font-medium transition bg-slate-100 text-slate-600 hover:bg-slate-200';
+        }
+      });
+      applyFilters();
+    }
+
+    function clearFilters() {
+      document.getElementById('searchInput').value = '';
+      setCategoryFilter('All');
+    }
+
+    function applyFilters() {
+      const searchQuery = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+      const sortType = document.getElementById('sortSelect').value;
+
+      let filtered = products.filter(item => {
+        const matchesCategory = currentFilterCategory === 'All' || item.category === currentFilterCategory;
+        const matchesSearch = item.title.toLowerCase().includes(searchQuery) || 
+                              item.desc.toLowerCase().includes(searchQuery) ||
+                              item.category.toLowerCase().includes(searchQuery);
+        return matchesCategory && matchesSearch && item.status !== 'sold';
+      });
+
+      // Sorting
+      if (sortType === 'price-asc') {
+        filtered.sort((a, b) => a.sellingPrice - b.sellingPrice);
+      } else if (sortType === 'price-desc') {
+        filtered.sort((a, b) => b.sellingPrice - a.sellingPrice);
+      } else if (sortType === 'savings') {
+        filtered.sort((a, b) => (b.originalPrice - b.sellingPrice) - (a.originalPrice - a.sellingPrice));
+      }
+
+      renderGrid(filtered);
+    }
+
+    function getIconForCover(coverType) {
+      if (coverType === 'cycle') return 'fa-bicycle';
+      if (coverType === 'tech') return 'fa-laptop';
+      if (coverType === 'book') return 'fa-book';
+      return 'fa-box-open';
+    }
+
+    // Render Product Grid
+    function renderProducts() {
+      applyFilters();
+    }
+
+    function renderGrid(items) {
+      const grid = document.getElementById('productGrid');
+      const noFound = document.getElementById('noProductsFound');
+
+      if (!items || items.length === 0) {
+        grid.innerHTML = '';
+        noFound.classList.remove('hidden');
+        return;
+      }
+      noFound.classList.add('hidden');
+
+      grid.innerHTML = items.map(product => {
+        const discountPercent = Math.round(((product.originalPrice - product.sellingPrice) / product.originalPrice) * 100);
+        const iconClass = getIconForCover(product.coverType);
+
+        return `
+          <div class="bg-white rounded-2xl border border-slate-200 hover:border-emerald-400 hover:shadow-lg transition flex flex-col justify-between overflow-hidden group">
+            <!-- Product Image / Visual Placeholder -->
+            <div class="h-44 bg-slate-100 flex items-center justify-center text-slate-400 text-4xl relative group-hover:scale-105 transition duration-300">
+              <i class="fa-solid ${iconClass}"></i>
+              <div class="absolute top-3 left-3 bg-white/90 backdrop-blur-xs text-[10px] font-bold text-slate-700 px-2 py-0.5 rounded-md shadow-xs">
+                ${product.category}
+              </div>
+              <div class="absolute top-3 right-3 bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs">
+                ${discountPercent > 0 ? `${discountPercent}% OFF` : 'DEAL'}
+              </div>
+            </div>
+
+            <!-- Content -->
+            <div class="p-4 flex-1 flex flex-col justify-between space-y-3">
+              <div>
+                <div class="flex items-center justify-between text-[11px] text-slate-400 mb-1">
+                  <span class="inline-flex items-center gap-1 font-medium text-slate-500">
+                    <i class="fa-solid fa-circle-check text-emerald-500"></i> ${product.condition}
+                  </span>
+                  <span>Escrow Safe</span>
+                </div>
+                <h4 class="font-bold text-slate-900 text-sm line-clamp-1 group-hover:text-emerald-600 transition">${escapeHtml(product.title)}</h4>
+                <p class="text-xs text-slate-500 line-clamp-2 mt-1">${escapeHtml(product.desc)}</p>
+              </div>
+
+              <!-- Price & CTA -->
+              <div class="pt-2 border-t border-slate-100 flex items-center justify-between">
+                <div>
+                  <div class="text-[10px] text-slate-400 line-through">$${Number(product.originalPrice).toFixed(2)}</div>
+                  <div class="text-lg font-black text-slate-900">$${Number(product.sellingPrice).toFixed(2)}</div>
+                </div>
+                <button onclick="openProductModal('${product.id}')" class="bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs">
+                  <span>View & Buy</span>
+                  <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Modal Details Renderer
+    function openProductModal(productId) {
+      const product = products.find(p => p.id === productId);
+      if (!product) return;
+
+      selectedProductForCheckout = product;
+
+      document.getElementById('modalCategory').innerText = product.category;
+      document.getElementById('modalCondition').innerText = product.condition;
+      document.getElementById('modalTitle').innerText = product.title;
+      document.getElementById('modalDesc').innerText = product.desc;
+      document.getElementById('modalPrice').innerText = `$${Number(product.sellingPrice).toFixed(2)}`;
+      document.getElementById('modalOrigPrice').innerText = `$${Number(product.originalPrice).toFixed(2)}`;
+      
+      const discount = Math.round(((product.originalPrice - product.sellingPrice) / product.originalPrice) * 100);
+      document.getElementById('modalSavings').innerText = `Save ${discount}%`;
+
+      const icon = document.getElementById('modalIcon');
+      icon.className = `fa-solid ${getIconForCover(product.coverType)}`;
+
+      const buyBtn = document.getElementById('modalBuyBtn');
+      buyBtn.onclick = function() {
+        closeModal('productModal');
+        openCheckoutModal(product);
+      };
+
+      openModal('productModal');
+    }
+
+    // Checkout Flow
+    function openCheckoutModal(product) {
+      selectedProductForCheckout = product;
+      document.getElementById('checkoutItemTitle').innerText = product.title;
+      document.getElementById('checkoutItemPrice').innerText = `$${Number(product.sellingPrice).toFixed(2)}`;
+      document.getElementById('checkoutBasePrice').innerText = `$${Number(product.sellingPrice).toFixed(2)}`;
+      document.getElementById('checkoutTotalPayable').innerText = `$${Number(product.sellingPrice).toFixed(2)}`;
+      document.getElementById('checkoutProfitExplain').innerText = `$${Number(product.sellingPrice).toFixed(2)}`;
+
+      openModal('checkoutModal');
+    }
+
+    function confirmOrderPurchase() {
+      const address = document.getElementById('buyerAddress').value.trim();
+      if (!address) {
+        showToast('Please provide your delivery address or hostel room number', 'error');
+        return;
+      }
+
+      const p = selectedProductForCheckout;
+      if (!p) return;
+
+      const platformFee = Number((p.sellingPrice * PLATFORM_FEE_RATE).toFixed(2));
+      const sellerPayout = Number((p.sellingPrice - platformFee).toFixed(2));
+
+      // Create new order record
+      const newOrder = {
+        orderId: `ORD-${Math.floor(1000 + Math.random() * 9000)}`,
+        productId: p.id,
+        title: p.title,
+        buyerName: 'Alex Morgan (Buyer)',
+        buyerAddress: address,
+        sellerName: p.sellerName || 'Anonymous Seller',
+        sellerUpi: p.sellerUpi || 'seller@upi',
+        price: Number(p.sellingPrice),
+        platformFee: platformFee,
+        sellerPayout: sellerPayout,
+        status: 'Placed', // Flow: Placed -> Verified & In Transit -> Delivered & Released
+        orderDate: new Date().toISOString().split('T')[0]
+      };
+
+      // Mark product status as sold
+      p.status = 'sold';
+
+      orders.unshift(newOrder);
+      saveState();
+
+      closeModal('checkoutModal');
+      renderProducts();
+      renderSellerInventory();
+      renderAdminDashboard();
+
+      showToast(`Order #${newOrder.orderId} Placed! Funds held securely in escrow.`);
+    }
+
+    // Real-Time Seller Payout Calculator
+    function updateCalculator() {
+      const sellingInput = parseFloat(document.getElementById('itemSellingPrice').value) || 0;
+      const declaredPriceEl = document.getElementById('calcDeclaredPrice');
+      const payoutEl = document.getElementById('calcSellerPayout');
+      const profitEl = document.getElementById('calcPlatformProfit');
+      const finalPriceEl = document.getElementById('calcFinalPrice');
+
+      const platformProfit = Number((sellingInput * PLATFORM_FEE_RATE).toFixed(2));
+      const sellerPayout = Number((sellingInput - platformProfit).toFixed(2));
+
+      declaredPriceEl.innerText = `$${sellingInput.toFixed(2)}`;
+      payoutEl.innerText = `$${sellerPayout.toFixed(2)}`;
+      profitEl.innerText = `$${platformProfit.toFixed(2)}`;
+      finalPriceEl.innerText = `$${sellingInput.toFixed(2)}`;
+    }
+
+    // Handle Seller Form Submission (with client-side validation)
+    function handleListingSubmit(e) {
+      e.preventDefault();
+
+      const title = document.getElementById('itemTitle').value.trim();
+      const category = document.getElementById('itemCategory').value;
+      const condition = document.getElementById('itemCondition').value;
+      const originalPrice = parseFloat(document.getElementById('itemOriginalPrice').value);
+      const sellingPrice = parseFloat(document.getElementById('itemSellingPrice').value);
+      const desc = document.getElementById('itemDesc').value.trim();
+      const upi = document.getElementById('sellerUpi').value.trim();
+      const phone = document.getElementById('sellerPhone').value.trim();
+      
+      const coverType = document.querySelector('input[name="coverType"]:checked')?.value || 'general';
+
+      // JavaScript Validation
+      const titleErr = document.getElementById('titleErr');
+      if (title.length < 5) {
+        titleErr.classList.remove('hidden');
+        return;
+      } else {
+        titleErr.classList.add('hidden');
+      }
+
+      if (sellingPrice >= originalPrice) {
+        showToast('Second-hand convenient price should be less than the original retail price.', 'error');
+        return;
+      }
+
+      const newProduct = {
+        id: `PRD-${Math.floor(100 + Math.random() * 900)}`,
+        title,
+        category,
+        condition,
+        originalPrice,
+        sellingPrice,
+        desc,
+        sellerName: 'Alex (You)',
+        sellerUpi: upi,
+        sellerPhone: phone,
+        coverType,
+        status: 'available',
+        createdAt: new Date().toISOString().split('T')[0]
+      };
+
+      products.unshift(newProduct);
+      saveState();
+
+      // Reset form
+      document.getElementById('sellForm').reset();
+      updateCalculator();
+      renderProducts();
+      renderSellerInventory();
+
+      showToast('Item successfully posted to live marketplace!');
+      switchView('browse');
+    }
+
+    // Render Seller's Inventory
+    function renderSellerInventory() {
+      const container = document.getElementById('sellerItemsContainer');
+      const countEl = document.getElementById('sellerActiveCount');
+
+      const sellerItems = products.filter(p => p.sellerName.includes('Alex') || p.sellerName.includes('You'));
+      countEl.innerText = `${sellerItems.length} Items`;
+
+      if (sellerItems.length === 0) {
+        container.innerHTML = `
+          <div class="py-6 text-center text-slate-400 text-xs">
+            You haven't listed any items yet. Fill out the form above to post your first item!
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = sellerItems.map(item => {
+        const isSold = item.status === 'sold';
+        return `
+          <div class="py-3 flex items-center justify-between text-xs">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500">
+                <i class="fa-solid ${getIconForCover(item.coverType)}"></i>
+              </div>
+              <div>
+                <span class="font-bold text-slate-800">${escapeHtml(item.title)}</span>
+                <div class="text-[11px] text-slate-400 flex items-center gap-2">
+                  <span>${item.category}</span>
+                  <span>&bull;</span>
+                  <span>Your Payout: <strong class="text-emerald-600">$${(item.sellingPrice * 0.9).toFixed(2)}</strong></span>
+                </div>
+              </div>
+            </div>
+            <div>
+              ${isSold 
+                ? '<span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full">Sold (In Escrow)</span>' 
+                : '<span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">Active On Marketplace</span>'}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Admin & Team Operations Hub
+    function renderAdminDashboard() {
+      const tableBody = document.getElementById('ordersTableBody');
+      const noOrders = document.getElementById('noOrdersMessage');
+
+      let gmv = 0;
+      let profit = 0;
+      let payouts = 0;
+      let activePipelineCount = 0;
+
+      orders.forEach(o => {
+        gmv += Number(o.price);
+        if (o.status === 'Delivered & Released') {
+          profit += Number(o.platformFee);
+          payouts += Number(o.sellerPayout);
+        } else {
+          activePipelineCount++;
+        }
+      });
+
+      document.getElementById('statGmv').innerText = `$${gmv.toFixed(2)}`;
+      document.getElementById('statProfit').innerText = `$${profit.toFixed(2)}`;
+      document.getElementById('statPayouts').innerText = `$${payouts.toFixed(2)}`;
+      document.getElementById('statActiveOrders').innerText = activePipelineCount;
+
+      if (!orders || orders.length === 0) {
+        tableBody.innerHTML = '';
+        noOrders.classList.remove('hidden');
+        return;
+      }
+      noOrders.classList.add('hidden');
+
+      tableBody.innerHTML = orders.map(ord => {
+        let statusBadge = '';
+        let actionBtn = '';
+
+        if (ord.status === 'Placed') {
+          statusBadge = '<span class="bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded-full text-[10px]">1. Order Placed</span>';
+          actionBtn = `
+            <button onclick="advanceOrderStatus('${ord.orderId}', 'Verified & In Transit')" class="bg-slate-900 hover:bg-slate-800 text-white px-2.5 py-1 rounded-lg text-[11px] font-semibold">
+              <i class="fa-solid fa-clipboard-check mr-1"></i> Verify & Dispatch
+            </button>
+          `;
+        } else if (ord.status === 'Verified & In Transit') {
+          statusBadge = '<span class="bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-full text-[10px]">2. Tested & In Transit</span>';
+          actionBtn = `
+            <button onclick="advanceOrderStatus('${ord.orderId}', 'Delivered & Released')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded-lg text-[11px] font-semibold shadow-xs">
+              <i class="fa-solid fa-money-bill-transfer mr-1"></i> Deliver & Release Payout
+            </button>
+          `;
+        } else {
+          statusBadge = '<span class="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full text-[10px]">3. Closed & Settled</span>';
+          actionBtn = `<span class="text-slate-400 font-medium text-[11px]"><i class="fa-solid fa-check-double text-emerald-600 mr-1"></i> Payout Complete</span>`;
+        }
+
+        return `
+          <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+            <td class="py-3 px-4 font-bold text-slate-800">
+              <span class="block">${ord.orderId}</span>
+              <span class="text-[11px] font-normal text-slate-500">${escapeHtml(ord.title)}</span>
+            </td>
+            <td class="py-3 px-4">
+              <div class="text-slate-900 font-medium">${escapeHtml(ord.buyerName)}</div>
+              <div class="text-[11px] text-slate-400">Seller: ${escapeHtml(ord.sellerName)} (${ord.sellerUpi})</div>
+            </td>
+            <td class="py-3 px-4 font-bold text-slate-900">$${Number(ord.price).toFixed(2)}</td>
+            <td class="py-3 px-4 font-bold text-emerald-600">+$${Number(ord.platformFee).toFixed(2)}</td>
+            <td class="py-3 px-4 font-semibold text-slate-700">$${Number(ord.sellerPayout).toFixed(2)}</td>
+            <td class="py-3 px-4">${statusBadge}</td>
+            <td class="py-3 px-4 text-right">${actionBtn}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Order Lifecycle State Transition
+    function advanceOrderStatus(orderId, newStatus) {
+      const order = orders.find(o => o.orderId === orderId);
+      if (!order) return;
+
+      order.status = newStatus;
+      saveState();
+      renderAdminDashboard();
+
+      if (newStatus === 'Delivered & Released') {
+        showToast(`Delivered! $${order.sellerPayout.toFixed(2)} wired to seller. Team profit +$${order.platformFee.toFixed(2)} booked!`);
+      } else {
+        showToast(`Order ${orderId} marked as Quality Verified & In Transit`);
+      }
+    }
+
+    // Seed Random Order for Demo
+    function seedDemoOrders() {
+      const randomId = Math.floor(1000 + Math.random() * 9000);
+      const demoPrices = [50, 120, 240, 80];
+      const randomPrice = demoPrices[Math.floor(Math.random() * demoPrices.length)];
+      const platformFee = Number((randomPrice * PLATFORM_FEE_RATE).toFixed(2));
+      const sellerPayout = Number((randomPrice - platformFee).toFixed(2));
+
+      orders.unshift({
+        orderId: `ORD-${randomId}`,
+        productId: `PRD-${randomId}`,
+        title: `Pre-owned Student Kit #${randomId}`,
+        buyerName: 'Rahul Deshmukh',
+        buyerAddress: 'Hostel 1, Room 204',
+        sellerName: 'Sneha K.',
+        sellerUpi: 'sneha@oksbi',
+        price: randomPrice,
+        platformFee: platformFee,
+        sellerPayout: sellerPayout,
+        status: 'Placed',
+        orderDate: new Date().toISOString().split('T')[0]
+      });
+
+      saveState();
+      renderAdminDashboard();
+      showToast('Simulated test order placed in escrow pipeline!');
+    }
+
+    function updatePendingBadge() {
+      const pendingCount = orders.filter(o => o.status !== 'Delivered & Released').length;
+      document.getElementById('pendingBadge').innerText = pendingCount;
+      document.getElementById('mobilePendingBadge').innerText = pendingCount;
+    }
+
+    // Modal Control Helpers
+    function openModal(id) {
+      document.getElementById(id).classList.remove('hidden');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.add('hidden');
+    }
+
+    // Toast Notifications
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+
+      const isError = type === 'error';
+      toast.className = `px-4 py-3 rounded-xl shadow-xl text-xs font-semibold flex items-center gap-2 pointer-events-auto transform transition duration-300 translate-y-2 opacity-0 ${
+        isError ? 'bg-red-600 text-white' : 'bg-slate-900 text-white border border-slate-700'
+      }`;
+
+      toast.innerHTML = `
+        <i class="fa-solid ${isError ? 'fa-triangle-exclamation' : 'fa-circle-check text-emerald-400'}"></i>
+        <span>${escapeHtml(message)}</span>
+      `;
+
+      container.appendChild(toast);
+
+      // Animation in
+      setTimeout(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      }, 10);
+
+      // Auto Dismiss
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    // Prevent XSS
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    // Boot App on Window Load
+    window.onload = function() {
+      initApp();
+    };
+  </script>
+</body>
+</html>
